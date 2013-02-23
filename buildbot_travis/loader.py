@@ -126,12 +126,12 @@ class Loader(object):
         spawner_name = name
 
         if not repository.endswith("/"):
-            repository = repository + "/"
+            log.msg("%s doesn't end with a /" % repository)
 
         if not vcs_type:
             if repository.startswith("https://svn."):
                 vcs_type = "svn"
-            elif repository.startswith("git://"):
+            elif repository.startswith("git://") or repository.startswith("git@"):
                 vcs_type = "git"
 
         if not username and not password:
@@ -195,6 +195,10 @@ class Loader(object):
             onlyImportant=True,
             fileIsImportant=fileIsImportant,
             ))
+        from buildbot.schedulers.forcesched import ForceScheduler
+        self.config['schedulers'].append(ForceScheduler(
+                            name="%s-force" % spawner_name,
+                            builderNames=[spawner_name]))
 
         setup_poller = dict(git=self.setup_git_poller, svn=self.setup_svn_poller)[vcs_type]
         setup_poller(repository, branch, name, username, password)

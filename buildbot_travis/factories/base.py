@@ -10,13 +10,13 @@ class BaseFactory(factory.BuildFactory):
     def __init__(self, repository, vcs_type=None, branch=None, username=None, password=None):
         factory.BuildFactory.__init__(self, [])
 
-        if not repository.endswith("/"):
+        if not repository.endswith("/") and not repository.startswith("git@"):
             repository += "/"
 
         if not vcs_type:
             if repository.startswith("https://svn."):
                 vcs_type = "svn"
-            elif repository.startswith("git://"):
+            elif repository.startswith("git://") or repository.startswith("git@"):
                 vcs_type = "git"
 
         if not branch:
