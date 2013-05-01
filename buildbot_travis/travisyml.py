@@ -1,4 +1,5 @@
 import re
+import shlex
 from yaml import safe_load
 
 TRAVIS_HOOKS = ("before_install", "install", "after_install", "before_script", "script", "after_script")
@@ -13,10 +14,15 @@ def parse_env_string(env):
     if not env.strip():
         return props
 
-    vars = env.split(" ")
+    vars = shlex.split(env)
+    latest = None
     for v in vars:
-        k, v = v.split("=")
-        props[k] = v
+        if '=' not in v:
+            props[latest] += ' ' + v
+        else:
+            k, v = v.split("=", 1)
+            props[k] = v
+            latest = k
 
     return props
 
@@ -59,7 +65,6 @@ class TravisYml(object):
             self.language = self.config['language']
         except:
             raise TravisYmlInvalid("'language' parameter is missing")
-
 
     def parse_envs(self):
         env = self.config.get("env", None)
