@@ -133,7 +133,8 @@ class Loader(object):
         if not vcs_type:
             if repository.startswith("https://svn."):
                 vcs_type = "svn"
-            elif repository.startswith("git://") or repository.startswith("git@"):
+            elif repository.startswith("git://") or repository.startswith("git@")\
+                    or repository.endswith(".git"):
                 vcs_type = "git"
 
         if not username and not password:
@@ -150,7 +151,7 @@ class Loader(object):
         # Define the builder for the main job
         self.config['builders'].append(BuilderConfig(
             name=job_name,
-            slavenames=self.get_runner_slaves(),
+            slavenames=self.get_spawner_slaves(),
             properties=self.properties,
             #mergeRequests = mergeRequests,
             mergeRequests=False,
@@ -183,7 +184,7 @@ class Loader(object):
         self.config['builders'].append(BuilderConfig(
             name = spawner_name,
             nextBuild = nextBuild,
-            slavenames = self.config['slaves'],
+            slavenames = get_spawner_slaves,
             properties = self.properties,
             category = "spawner",
             factory = TravisSpawnerFactory(
