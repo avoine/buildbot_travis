@@ -245,7 +245,6 @@ class Loader(object):
         pollerdir = self.make_poller_dir(project)
         self.config['change_source'].append(gitpoller.GitPoller(
             repourl=repository,
-            repository=repository,
             workdir=pollerdir,
             project=project,
             ))
