@@ -115,12 +115,14 @@ class Loader(object):
 
     def get_spawner_slaves(self):
         from buildbot.buildslave import BuildSlave
-        slaves = [s.slavename for s in self.config['slaves'] if isinstance(s, BuildSlave)]
+        slaves = [s.slavename for s in self.config[
+            'slaves'] if isinstance(s, BuildSlave)]
         return slaves
 
     def get_runner_slaves(self):
         from buildbot.buildslave import AbstractLatentBuildSlave
-        slaves = [s.slavename for s in self.config['slaves'] if isinstance(s, AbstractLatentBuildSlave)]
+        slaves = [s.slavename for s in self.config['slaves']
+                  if isinstance(s, AbstractLatentBuildSlave)]
         return slaves
 
     def define_travis_builder(self, name, repository, branch=None, vcs_type=None, username=None, password=None, subrepos=None):
@@ -146,7 +148,8 @@ class Loader(object):
         codebases = {spawner_name: {'repository': repository}}
         if subrepos:
             for subrepo in subrepos:
-                codebases[subrepo['project']] = {'repository': subrepo['repository']}
+                codebases[subrepo['project']] = {
+                    'repository': subrepo['repository']}
 
         # Define the builder for the main job
         self.config['builders'].append(BuilderConfig(
@@ -162,41 +165,41 @@ class Loader(object):
                 HAS_JOSH_K_SEAL_OF_APPROVAL="true",
                 LANG="en_GB.UTF-8",
                 LC_ALL="en_GB.UTF-8",
-                ),
-            factory = TravisFactory(
-                projectname = spawner_name,
-                repository = repository,
-                branch = branch,
-                vcs_type = vcs_type,
-                username = username,
-                password = password,
-                subrepos = subrepos,
-                ),
-             ))
+            ),
+            factory=TravisFactory(
+                projectname=spawner_name,
+                repository=repository,
+                branch=branch,
+                vcs_type=vcs_type,
+                username=username,
+                password=password,
+                subrepos=subrepos,
+            ),
+        ))
 
         self.config['schedulers'].append(Triggerable(
-            name=job_name, 
+            name=job_name,
             builderNames=[job_name],
             codebases=codebases,
-            ))
+        ))
 
         # Define the builder for a spawer
         self.config['builders'].append(BuilderConfig(
-            name = spawner_name,
-            nextBuild = nextBuild,
-            slavenames = self.get_spawner_slaves(),
-            properties = self.properties,
-            category = "spawner",
-            factory = TravisSpawnerFactory(
-                projectname = spawner_name,
-                repository = repository,
-                branch = branch,
-                scheduler = job_name,
-                vcs_type = vcs_type,
-                username = username,
-                password = password,
-                ),
-            ))
+            name=spawner_name,
+            nextBuild=nextBuild,
+            slavenames=self.get_spawner_slaves(),
+            properties=self.properties,
+            category="spawner",
+            factory=TravisSpawnerFactory(
+                projectname=spawner_name,
+                repository=repository,
+                branch=branch,
+                scheduler=job_name,
+                vcs_type=vcs_type,
+                username=username,
+                password=password,
+            ),
+        ))
 
         SchedulerKlass = {
             True: SingleBranchScheduler,
@@ -204,23 +207,24 @@ class Loader(object):
         }[bool(branch)]
 
         self.config['schedulers'].append(SchedulerKlass(
-            name = spawner_name,
-            builderNames = [spawner_name],
-            change_filter = ChangeFilter(project=name),
-            onlyImportant = True,
-            fileIsImportant = fileIsImportant,
+            name=spawner_name,
+            builderNames=[spawner_name],
+            change_filter=ChangeFilter(project=name),
+            onlyImportant=True,
+            fileIsImportant=fileIsImportant,
             codebases=codebases,
-            ))
+        ))
 
         try:
             from buildbot.schedulers.forcesched import ForceScheduler
             self.config['schedulers'].append(ForceScheduler(
-                                name="%s-force" % spawner_name,
-                                builderNames=[spawner_name]))
+                name="%s-force" % spawner_name,
+                builderNames=[spawner_name]))
         except ImportError:
             pass
 
-        self.setup_poller(repository, vcs_type, branch, name, username, password)
+        self.setup_poller(
+            repository, vcs_type, branch, name, username, password)
 
     def setup_poller(self, repository, vcs_type=None, branch=None, project=None, username=None, password=None):
         if not vcs_type:
@@ -229,7 +233,8 @@ class Loader(object):
             elif repository.startswith("git://github.com/"):
                 vcs_type = "git"
 
-        setup_poller_func = dict(git=self.setup_git_poller, svn=self.setup_svn_poller)[vcs_type]
+        setup_poller_func = dict(
+            git=self.setup_git_poller, svn=self.setup_svn_poller)[vcs_type]
         setup_poller_func(repository, branch, project, username, password)
 
     def make_poller_dir(self, name):
@@ -247,7 +252,7 @@ class Loader(object):
             repourl=repository,
             workdir=pollerdir,
             project=project,
-            ))
+        ))
 
     def get_repository_root(self, repository, username=None, password=None):
         import subprocess
@@ -276,8 +281,10 @@ class Loader(object):
         else:
             repo = self.get_repository_root(repository, username, password)
 
-            scheme, netloc, path, params, query, fragment = urlparse.urlparse(repo)
-            name = "%s-%s-%s" % (scheme, netloc.replace(".", "-"), path.rstrip("/").lstrip("/").replace("/", "-"))
+            scheme, netloc, path, params, query, fragment = urlparse.urlparse(
+                repo)
+            name = "%s-%s-%s" % (scheme, netloc.replace(".", "-"),
+                                 path.rstrip("/").lstrip("/").replace("/", "-"))
             pollerdir = self.make_poller_dir(name)
 
             splitter = self.repositories[repo] = SVNChangeSplitter(repo)
@@ -289,6 +296,6 @@ class Loader(object):
                 split_file=splitter,
                 svnuser=username,
                 svnpasswd=password,
-                ))
+            ))
 
         splitter.add(repository, branch, project)
