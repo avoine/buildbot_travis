@@ -229,8 +229,8 @@ class Loader(object):
             elif repository.startswith("git://github.com/"):
                 vcs_type = "git"
 
-        setup_poller = dict(git=self.setup_git_poller, svn=self.setup_svn_poller)[vcs_type]
-        setup_poller(repository, branch, project, username, password)
+        setup_poller_func = dict(git=self.setup_git_poller, svn=self.setup_svn_poller)[vcs_type]
+        setup_poller_func(repository, branch, project, username, password)
 
     def make_poller_dir(self, name):
         # Set up polling for the projects repository
@@ -245,6 +245,7 @@ class Loader(object):
         pollerdir = self.make_poller_dir(project)
         self.config['change_source'].append(gitpoller.GitPoller(
             repourl=repository,
+            repository=repository,
             workdir=pollerdir,
             project=project,
             ))
