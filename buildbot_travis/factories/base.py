@@ -19,13 +19,13 @@ class BaseFactory(factory.BuildFactory):
     def addRepository(self, project=None, repository=None, vcs_type=None, branch=None, username=None, password=None, **kwargs):
         kwargs = dict(kwargs)
 
-        if not repository.endswith("/"):
+        if not repository.endswith("/") and not repository.startswith("git@"):
             repository += "/"
 
         if not vcs_type:
             if repository.startswith("https://svn."):
                 vcs_type = "svn"
-            elif repository.startswith("git://github.com/"):
+            elif repository.startswith("git://") or repository.startswith("git@"):
                 vcs_type = "git"
 
         if not branch:

@@ -1,19 +1,20 @@
-import urlparse, os, shelve
+import urlparse
+import os
+import shelve
 
 from twisted.python import log
 
 from buildbot.config import BuilderConfig
 from buildbot.schedulers.triggerable import Triggerable
-from buildbot.schedulers.basic  import SingleBranchScheduler, AnyBranchScheduler
+from buildbot.schedulers.basic import SingleBranchScheduler, AnyBranchScheduler
 from buildbot.changes import svnpoller, gitpoller
 from buildbot.schedulers.filter import ChangeFilter
 
-from .changes import svnpoller
 from .factories import TravisFactory, TravisSpawnerFactory
-from .mergereq import mergeRequests
 from .config import nextBuild
 
 from yaml import safe_load
+
 
 def fileIsImportant(change):
     # Ignore "branch created"
@@ -127,7 +128,13 @@ class Loader(object):
         spawner_name = name
 
         if not repository.endswith("/"):
-            repository = repository + "/"
+            log.msg("%s doesn't end with a /" % repository)
+
+        if not vcs_type:
+            if repository.startswith("https://svn."):
+                vcs_type = "svn"
+            elif repository.startswith("git://") or repository.startswith("git@"):
+                vcs_type = "git"
 
         if not username and not password:
             p = urlparse.urlparse(repository)
@@ -142,18 +149,18 @@ class Loader(object):
 
         # Define the builder for the main job
         self.config['builders'].append(BuilderConfig(
-            name = job_name,
-            slavenames = self.get_runner_slaves(),
-            properties = self.properties,
+            name=job_name,
+            slavenames=self.get_runner_slaves(),
+            properties=self.properties,
             #mergeRequests = mergeRequests,
-            mergeRequests = False,
-            env = dict(
-                DEBIAN_FRONTEND = "noninteractive",
-                CI = "true",
-                TRAVIS = "true",
-                HAS_JOSH_K_SEAL_OF_APPROVAL = "true",
-                LANG = "en_GB.UTF-8",
-                LC_ALL = "en_GB.UTF-8",
+            mergeRequests=False,
+            env=dict(
+                DEBIAN_FRONTEND="noninteractive",
+                CI="true",
+                TRAVIS="true",
+                HAS_JOSH_K_SEAL_OF_APPROVAL="true",
+                LANG="en_GB.UTF-8",
+                LC_ALL="en_GB.UTF-8",
                 ),
             factory = TravisFactory(
                 projectname = spawner_name,
@@ -171,7 +178,6 @@ class Loader(object):
             builderNames=[job_name],
             codebases=codebases,
             ))
-
 
         # Define the builder for a spawer
         self.config['builders'].append(BuilderConfig(
@@ -191,7 +197,10 @@ class Loader(object):
                 ),
             ))
 
-        SchedulerKlass = {True:SingleBranchScheduler, False:AnyBranchScheduler}[bool(branch)]
+        SchedulerKlass = {
+            True: SingleBranchScheduler,
+            False: AnyBranchScheduler
+        }[bool(branch)]
 
         self.config['schedulers'].append(SchedulerKlass(
             name = spawner_name,
@@ -201,6 +210,10 @@ class Loader(object):
             fileIsImportant = fileIsImportant,
             codebases=codebases,
             ))
+        from buildbot.schedulers.forcesched import ForceScheduler
+        self.config['schedulers'].append(ForceScheduler(
+                            name="%s-force" % spawner_name,
+                            builderNames=[spawner_name]))
 
         self.setup_poller(repository, vcs_type, branch, name, username, password)
 
@@ -226,9 +239,9 @@ class Loader(object):
     def setup_git_poller(self, repository, branch, project, username=None, password=None):
         pollerdir = self.make_poller_dir(project)
         self.config['change_source'].append(gitpoller.GitPoller(
-            repourl = repository,
-            workdir = pollerdir,
-            project = project,
+            repourl=repository,
+            workdir=pollerdir,
+            project=project,
             ))
 
     def get_repository_root(self, repository, username=None, password=None):
@@ -239,7 +252,8 @@ class Loader(object):
             cmd.extend(["--username", username])
         if password:
             cmd.extend(["--password", password])
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env={'LC_MESSAGES':'C'})
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env={
+            'LC_MESSAGES': 'C'})
         s, e = p.communicate()
         for line in s.split("\n"):
             if ":" in line:
@@ -264,13 +278,12 @@ class Loader(object):
             splitter = self.repositories[repo] = SVNChangeSplitter(repo)
 
             self.config['change_source'].append(svnpoller.SVNPoller(
-                svnurl = repo,
-                cachepath = os.path.join(pollerdir, "pollerstate"),
-                project = None,
-                split_file = splitter,
-                svnuser = username,
-                svnpasswd = password,
+                svnurl=repo,
+                cachepath=os.path.join(pollerdir, "pollerstate"),
+                project=None,
+                split_file=splitter,
+                svnuser=username,
+                svnpasswd=password,
                 ))
 
         splitter.add(repository, branch, project)
-
