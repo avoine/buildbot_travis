@@ -46,6 +46,7 @@ class BaseFactory(factory.BuildFactory):
             kwargs.update(dict(
                 repourl=repository,
                 branch=branch,
+                codebase=project,
                 ))
 
             self.addStep(Git(**kwargs))
