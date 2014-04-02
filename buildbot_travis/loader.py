@@ -209,10 +209,14 @@ class Loader(object):
             onlyImportant = True,
             fileIsImportant = fileIsImportant,
             ))
-        from buildbot.schedulers.forcesched import ForceScheduler
-        self.config['schedulers'].append(ForceScheduler(
-                            name="%s-force" % spawner_name,
-                            builderNames=[spawner_name]))
+
+        try:
+            from buildbot.schedulers.forcesched import ForceScheduler
+            self.config['schedulers'].append(ForceScheduler(
+                                name="%s-force" % spawner_name,
+                                builderNames=[spawner_name]))
+        except ImportError:
+            pass
 
         self.setup_poller(repository, vcs_type, branch, name, username, password)
 
