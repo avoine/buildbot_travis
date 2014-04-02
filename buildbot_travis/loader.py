@@ -184,7 +184,7 @@ class Loader(object):
         self.config['builders'].append(BuilderConfig(
             name = spawner_name,
             nextBuild = nextBuild,
-            slavenames = get_spawner_slaves,
+            slavenames = self.get_spawner_slaves(),
             properties = self.properties,
             category = "spawner",
             factory = TravisSpawnerFactory(
@@ -209,6 +209,7 @@ class Loader(object):
             change_filter = ChangeFilter(project=name),
             onlyImportant = True,
             fileIsImportant = fileIsImportant,
+            codebases=codebases,
             ))
 
         try:
