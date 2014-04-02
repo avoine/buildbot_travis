@@ -18,5 +18,6 @@ setup(
         'setuptools',
         'buildbot',
         'PyYAML',
+        'txws',
     ],
 )
