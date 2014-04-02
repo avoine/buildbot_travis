@@ -183,7 +183,7 @@ class Loader(object):
         self.config['builders'].append(BuilderConfig(
             name = spawner_name,
             nextBuild = nextBuild,
-            slavenames = self.get_spawner_slaves(),
+            slavenames = self.config['slaves'],
             properties = self.properties,
             category = "spawner",
             factory = TravisSpawnerFactory(
@@ -208,7 +208,6 @@ class Loader(object):
             change_filter = ChangeFilter(project=name),
             onlyImportant = True,
             fileIsImportant = fileIsImportant,
-            codebases=codebases,
             ))
         from buildbot.schedulers.forcesched import ForceScheduler
         self.config['schedulers'].append(ForceScheduler(
