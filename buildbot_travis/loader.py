@@ -252,6 +252,7 @@ class Loader(object):
             repourl=repository,
             workdir=pollerdir,
             project=project,
+            pollInterval=300,
         ))
 
     def get_repository_root(self, repository, username=None, password=None):
